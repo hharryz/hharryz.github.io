@@ -1,0 +1,6 @@
+mkdocs
+mkdocs-drawio
+mkdocs-git-revision-date-localized-plugin
+mkdocs-glightbox
+mkdocs-include-dir-to-nav
+mkdocs-material

@@ -1,0 +1,105 @@
+nav:
+  - 🏡主页:
+    - index.md
+  - 计算机系统:
+    - system/index.md
+  - MLSys:
+    - mlsys/index.md
+
+site_name: HarryZ の Notebook
+site_url: https://hharryz.github.io/
+repo_url: https://github.com/hharryz/hharryz.github.io
+repo_name: hharryz.github.io
+site_author: HarryZ
+copyright: HarryZ
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: slate
+      toggle:
+        icon: material/brightness-auto
+        name: 切换至浅色模式
+    - media: "(prefers-color-scheme: light)"
+      scheme: day
+      toggle:
+        icon: material/brightness-7
+        name: 切换至深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: 根据系统模式切换主题
+  features:
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - navigation.footer
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.tracking
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+
+markdown_extensions: 
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  # mathjax
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.keys
+  - pymdownx.critic
+
+
+extra_javascript:
+  # mathjax
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/polyfill/index.min.js
+  - https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.js
+  # tablesort
+  - javascripts/tablesort.js
+  - https://cdn.jsdelivr.net/npm/tablesort/dist/tablesort.min.js
+
+extra_css:
+  - stylesheets/fonts.css
+  - stylesheets/theme.css
+
+plugins: 
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - glightbox
+  - include_dir_to_nav:
+      recurse: false
