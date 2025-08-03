@@ -5,13 +5,25 @@ nav:
     - system/index.md
   - MLSys:
     - mlsys/index.md
+  - AI:
+    - ai/index.md
+    - Diffusion:
+      - Introduction: ai/diffusion/index.md
+      - "Lec1: Flow and Diffusion Models": ai/diffusion/lec1.md
+      - "Lec2: Constructing a Training Target": ai/diffusion/lec2.md
+      - "Lec3: Training Flow and Diffusion Models": ai/diffusion/lec3.md
+      - "Lec4: Building an Image Generator": ai/diffusion/lec4.md
+    - RL:
+      - ai/rl/index.md
+  - 杂项:
+    - misc/index.md
 
 site_name: HarryZ の Notebook
 site_url: https://note.uqbarz.com/
 repo_url: https://github.com/hharryz/hharryz.github.io
 repo_name: hharryz.github.io
 site_author: HarryZ
-copyright: HarryZ
+copyright: Copyright © HarryZ
 
 theme:
   name: material
@@ -44,11 +56,12 @@ theme:
     - navigation.path
     - navigation.top
     - toc.follow
+    - content.action.view
     - search.suggest
     - search.highlight
     - search.share
 
-markdown_extensions: 
+markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences:
@@ -63,6 +76,9 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
   - pymdownx.tabbed:
       alternate_style: true
   - attr_list
@@ -94,8 +110,10 @@ extra_javascript:
 extra_css:
   - stylesheets/fonts.css
   - stylesheets/theme.css
+  - stylesheets/counter.css
+  - stylesheets/extra.css
 
-plugins: 
+plugins:
   - search
   - git-revision-date-localized:
       enable_creation_date: true
