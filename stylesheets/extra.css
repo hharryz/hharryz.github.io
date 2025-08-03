@@ -1,0 +1,6 @@
+
+/* 隐藏纵向公式滚动条 */
+.md-typeset div.arithmatex {
+  overflow-y: hidden;
+  overflow-x: auto;
+}

@@ -1,0 +1,1605 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="HarryZ">
+      
+      
+        <link rel="canonical" href="https://note.uqbarz.com/ai/diffusion/lec3/">
+      
+      
+        <link rel="prev" href="../lec2/">
+      
+      
+        <link rel="next" href="../lec4/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Lec3: Training Flow and Diffusion Models - HarryZ の Notebook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/theme.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/counter.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#training-flow-and-diffusion-models" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="HarryZ の Notebook" class="md-header__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HarryZ の Notebook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lec3: Training Flow and Diffusion Models
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="day" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="根据系统模式切换主题"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="根据系统模式切换主题" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+  🏡主页
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../system/" class="md-tabs__link">
+          
+  
+  
+  计算机系统
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../mlsys/" class="md-tabs__link">
+          
+  
+  
+  MLSys
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../misc/" class="md-tabs__link">
+          
+  
+  
+  杂项
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="HarryZ の Notebook" class="md-nav__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    HarryZ の Notebook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    🏡主页
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            🏡主页
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    计算机系统
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            计算机系统
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Computer Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MLSys
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            MLSys
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mlsys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Machine Learning Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    AI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            AI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deep Generative Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Diffusion
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec1: Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec2: Constructing a Training Target
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Lec3: Training Flow and Diffusion Models
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec3: Training Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#流匹配-flow-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      流匹配 Flow Matching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#得分匹配-score-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      得分匹配 Score Matching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#去噪扩散模型-denoising-diffusion-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      去噪扩散模型 Denoising Diffusion Models
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#如何阅读-diffusion-model-的文献" class="md-nav__link">
+    <span class="md-ellipsis">
+      如何阅读 Diffusion Model 的文献？
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何阅读 Diffusion Model 的文献？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#离散时间-vs-连续时间" class="md-nav__link">
+    <span class="md-ellipsis">
+      离散时间 vs 连续时间
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#正向过程-vs-概率路径" class="md-nav__link">
+    <span class="md-ellipsis">
+      "正向过程" vs 概率路径
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#时间反转-vs-fokker-planck-方程" class="md-nav__link">
+    <span class="md-ellipsis">
+      时间反转 vs Fokker-Planck 方程
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#流匹配与随机插值器" class="md-nav__link">
+    <span class="md-ellipsis">
+      流匹配与随机插值器
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec4: Building an Image Generator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    RL
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            RL
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    杂项
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            杂项
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../misc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#流匹配-flow-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      流匹配 Flow Matching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#得分匹配-score-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      得分匹配 Score Matching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#去噪扩散模型-denoising-diffusion-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      去噪扩散模型 Denoising Diffusion Models
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#如何阅读-diffusion-model-的文献" class="md-nav__link">
+    <span class="md-ellipsis">
+      如何阅读 Diffusion Model 的文献？
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何阅读 Diffusion Model 的文献？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#离散时间-vs-连续时间" class="md-nav__link">
+    <span class="md-ellipsis">
+      离散时间 vs 连续时间
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#正向过程-vs-概率路径" class="md-nav__link">
+    <span class="md-ellipsis">
+      "正向过程" vs 概率路径
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#时间反转-vs-fokker-planck-方程" class="md-nav__link">
+    <span class="md-ellipsis">
+      时间反转 vs Fokker-Planck 方程
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#流匹配与随机插值器" class="md-nav__link">
+    <span class="md-ellipsis">
+      流匹配与随机插值器
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+    
+      
+    
+    <a href="https://github.com/hharryz/hharryz.github.io/raw/master/docs/ai/diffusion/lec3.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="training-flow-and-diffusion-models">Training Flow and Diffusion Models<a class="headerlink" href="#training-flow-and-diffusion-models" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">动机</p>
+<p>在前两节中，我们展示了如何构建一个生成模型，其向量场 <span class="arithmatex">\(u^\theta_t\)</span> 由神经网络给出，并推导出了训练目标 <span class="arithmatex">\(u^{\text{target}}_t\)</span> 的公式。本节中，我们将说明如何训练神经网络 <span class="arithmatex">\(u^\theta_t\)</span> 来逼近训练目标 <span class="arithmatex">\(u^{\text{target}}_t\)</span>。</p>
+</div>
+<h2 id="流匹配-flow-matching">流匹配 Flow Matching<a class="headerlink" href="#流匹配-flow-matching" title="Permanent link">&para;</a></h2>
+<p>首先，我们把问题限制在 ODE 的场景下推导出<strong>流匹配（flow matching）</strong>的方法。</p>
+<p>一个流模型可以用以下方式给出：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{\text{init}}, \quad dX_t = u_t^{\theta}(X_t)dt
+\]</div>
+<p>机器学习的方法就是学习到参数 <span class="arithmatex">\(\theta\)</span>，使得 <span class="arithmatex">\(u_t^\theta\approx u_t^\text{target}\)</span>. 我们通常需要定义一个损失函数，在流匹配的语境下就是 flow matching loss. 一个直观的来获得 <span class="arithmatex">\(u_t^\theta \approx u_t^{\text{target}}\)</span> 的方法是使用均方误差（mean-squared error）。</p>
+<div class="admonition info">
+<p class="admonition-title">一些 Notations</p>
+<ul>
+<li>我们用 <span class="arithmatex">\(\text{Unif} = \text{Unif}[0,1]\)</span> 表示区间 <span class="arithmatex">\([0, 1]\)</span> 上的均匀分布，用 <span class="arithmatex">\(\mathbb{E}\)</span> 表示随机变量的期望值。</li>
+<li><span class="arithmatex">\(p_t(x) = \int p_t(x|z) p_{\text{data}}(z) dz\)</span> 在之前已经提过，是边际概率路径函数。</li>
+</ul>
+</div>
+<div class="arithmatex">\[
+\begin{align*}
+\mathcal{L}_{\text{FM}}(\theta) &amp;= \mathbb{E}_{t \sim \text{Unif}, x \sim p_t} [\|u_t^{\theta}(x) - u_t^{\text{target}}(x)\|^2] \\
+&amp;\stackrel{(i)}{=} \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} [\|u_t^{\theta}(x) - u_t^{\text{target}}(x)\|^2],
+\end{align*}
+\]</div>
+<p>我们可以这样感性地理解这个损失函数：首先，从区间 <span class="arithmatex">\([0, 1]\)</span> 中随机采样一个时间 <span class="arithmatex">\(t\)</span>；然后，从数据集中随机选择一个点 <span class="arithmatex">\(z\)</span>，并从条件分布 <span class="arithmatex">\(p_t(\cdot | z)\)</span> 中采样（例如，通过添加一些噪声），并计算神经网络输出的 <span class="arithmatex">\(u_t^\theta(x)\)</span>。最后，计算神经网络输出与边际向量场 <span class="arithmatex">\(u_t^{\text{target}}(x)\)</span> 之间的均方误差。</p>
+<p>然后，很不幸的事情在于，<span class="arithmatex">\(u_t^{\text{target}}(x)\)</span> 过于复杂，导致我们无法用它来进行计算。<strong>但是</strong>，我们可以把它转化为条件向量场 <span class="arithmatex">\(u_t^{\text{target}}(x|z)\)</span>，而后者是相对容易计算的。下面，我们给出一个新的损失函数。</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} [\| u_t^{\theta}(x) - u_t^{\text{target}}(x|z) \|^2].
+\]</div>
+<p>这个新的损失函数能够帮助我们实现：通过显式地回归可处理的<strong>条件向量场</strong>，来隐式地回归难以处理的<strong>边际向量场</strong>。而这一点之所以能够成立，我们需要定理的支撑，下面我们给出这个定理。</p>
+<div class="admonition info">
+<p class="admonition-title">定理</p>
+<p>边际流匹配损失（marginal flow matching loss）与条件流匹配损失（conditional flow matching loss）仅相差一个常数，即：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{FM}(\theta) = \mathcal{L}_{CFM}(\theta) + C
+\]</div>
+<p>其中 C 是一个与参数 <span class="arithmatex">\(\theta\)</span> 无关的常数。因此，它们的梯度是相同的：</p>
+<div class="arithmatex">\[
+\nabla_{\theta}\mathcal{L}_{FM}(\theta)=\nabla_{\theta}\mathcal{L}_{CFM}(\theta)
+\]</div>
+<p>这意味着，通过随机梯度下降（SGD）等方法最小化 <span class="arithmatex">\(\mathcal{L}_{CFM}(\theta)\)</span>，其效果等同于最小化 <span class="arithmatex">\(\mathcal{L}_{FM}(\theta)\)</span>。特别地，对于 <span class="arithmatex">\(\mathcal{L}_{CFM}(\theta)\)</span> 的最优解 <span class="arithmatex">\(\theta^{*}\)</span>，在模型具有无限表达能力的前提下，它将满足 <span class="arithmatex">\(u_{t}^{\theta^{*}} = u_{t}^{target}\)</span>。</p>
+<p>我们在这里不给出定理的证明。</p>
+</div>
+<p>在理论基础完备之后，我们以高斯条件概率路径为例给出一个流匹配的例子。</p>
+<p>我们已经多次给出了高斯概率路径的公式化描述：<span class="arithmatex">\(p_t(\cdot|z) = \mathcal{N}(\alpha_t z; \beta_t^2 I_d)\)</span>。下面，我们给出一种从高斯概率路径采样 <span class="arithmatex">\(x_t\)</span> 的方法：</p>
+<div class="arithmatex">\[
+\epsilon \sim \mathcal{N}(0, I_d) \quad \Rightarrow \quad x_t = \alpha_t z + \beta_t \epsilon \sim \mathcal{N}(\alpha_t z, \beta_t^2 I_d) = p_t(\cdot|z)
+\]</div>
+<details class="warning">
+<summary>复习概率论！</summary>
+<p>P.S. 为什么这样采样成立呢？让我们来回顾一下概率论的知识吧😝
+这个采样方法其实就是利用了<strong>高斯分布在仿射变换下的封闭性</strong>——也就是说，对标准正态噪声做一次线性变换再加上偏移，得到的仍然是高斯分布，而且它的均值和协方差正好是我们想要的。</p>
+<p>我们先从标准多元正态分布中采样：<span class="arithmatex">\(\epsilon \sim \mathcal{N}(0, I_d)\)</span>，然后对这个噪声做仿射变换：<span class="arithmatex">\(x_t = \alpha_t\,z \;+\;\beta_t\,\epsilon\)</span></p>
+<p>然后我们计算<strong>均值与协方差</strong>。由于 <span class="arithmatex">\(\epsilon\)</span> 的均值为 <span class="arithmatex">\(0\)</span>，所以</p>
+<div class="arithmatex">\[
+\mathbb{E}[x_t] = \alpha_t z + \beta_t \mathbb{E}[\epsilon] = \alpha_t z
+\]</div>
+<p>而 <span class="arithmatex">\(\epsilon\)</span> 的协方差矩阵是 <span class="arithmatex">\(I_d\)</span>，仿射变换后，噪声部分的协方差变为</p>
+<div class="arithmatex">\[
+\text{Cov}(\beta_t \epsilon) = \beta_t^2 \text{Cov}(\epsilon) = \beta_t^2 I_d
+\]</div>
+<p>偏移量 <span class="arithmatex">\(\alpha_t z\)</span> （在选择好特定的 data point 后，已经可以被视为一个常量，而常量不影响协方差计算）不影响协方差。</p>
+</details>
+<p>然后，我们也已经有了条件向量场的公式：</p>
+<div class="arithmatex">\[
+u_t^{\text{target}}(x|z) = \left( \dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t}\alpha_t \right) z + \frac{\dot{\beta}_t}{\beta_t}x
+\]</div>
+<p>把这些公式代入 <span class="arithmatex">\(\mathcal{L}_{\text{cfm}}(\theta)\)</span> 就能够得到：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\mathcal{L}_{\text{CFM}}(\theta) &amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim \mathcal{N}(\alpha_t z, \beta_t^2 I_d)} \left[ \left\| u_t^{\theta}(x) - \left( \dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t}\alpha_t \right)z - \frac{\dot{\beta}_t}{\beta_t}x \right\|^2 \right] \\
+&amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, \epsilon \sim \mathcal{N}(0, I_d)} \left[ \left\| u_t^{\theta}(\alpha_t z + \beta_t\epsilon) - (\dot{\alpha}_t z + \dot{\beta}_t\epsilon) \right\|^2 \right]
+\end{align*}
+\]</div>
+<p>特别地，如果我们令 <span class="arithmatex">\(\alpha_t=t,\beta_t=1-t\)</span>，就可以得到一个更加简单的结果：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{cfm}}(\theta) = \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, \epsilon \sim \mathcal{N}(0, I_d)} \left[ \left\| u_t^{\theta}(tz + (1-t)\epsilon) - (z-\epsilon) \right\|^2 \right]
+\]</div>
+<p>很多的 SOTA 模型都是利用这个简单有效的公式训练出来的。</p>
+<p><a class="glightbox" href="../img/image-20250724144053661.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250724144053661" src="../img/image-20250724144053661.webp" /></a></p>
+<h2 id="得分匹配-score-matching">得分匹配 Score Matching<a class="headerlink" href="#得分匹配-score-matching" title="Permanent link">&para;</a></h2>
+<p>接下来，我们介绍<strong>得分匹配（score matching）</strong>将上面的方法扩展到 SDE。</p>
+<p>我们再来回顾一下 ODE 是如何扩展到 SDE 的。</p>
+<div class="arithmatex">\[
+\begin{align*}
+    dX_t &amp;= \left[ u_t^{\text{target}}(X_t) + \frac{\sigma_t^2}{2}\nabla \log p_t(X_t) \right] dt + \sigma_t dW_t \\
+    X_0 &amp;\sim p_{\text{init}}, \\
+    \Rightarrow X_t &amp;\sim p_t \quad (0 \le t \le 1)
+\end{align*}
+\]</div>
+<p>上面，我们已经给出了训练 <span class="arithmatex">\(u_t^{\text{target}}\)</span> 的方法，那么剩下的问题就是要训练一个新的参数 <span class="arithmatex">\(\nabla\log p_t\)</span>，我们可以用一个新的神经网络——得分网络 (score network) <span class="arithmatex">\(s_t^\theta:\mathbb{R}^d\times[0,1]\rightarrow\mathbb{R}^d\)</span> 来拟合它。同上，我们可以很类似地得到（条件）得分匹配的损失函数：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\mathcal{L}_{\text{SM}}(\theta) &amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} [\|s_t^{\theta}(x) - \nabla \log p_t(x)\|^2] \quad \blacktriangleright \text{ score matching loss} \\
+\mathcal{L}_{\text{CSM}}(\theta) &amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} [\|s_t^{\theta}(x) - \nabla \log p_t(x|z)\|^2] \quad \blacktriangleright \text{ conditional score matching loss}
+\end{align*}
+\]</div>
+<p>同样十分类似地，我们可以直接用条件得分匹配来进行训练，原因也是因为这个很类似的定理：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{SM}}(\theta) = \mathcal{L}_{\text{CSM}}(\theta) + C
+\]</div>
+<p>具体内容我们不再详细展开。</p>
+<p>接下来，当我们完成了对两个神经网络的训练，只需要再选择一个去噪系数 (diffusion coefficient) <span class="arithmatex">\(\sigma_t\geq0\)</span>，就能够模拟这个 SDE 了：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{\text{init}}, \quad dX_t = \left[ u_t^{\theta}(X_t) + \frac{\sigma_t^2}{2} s_t^{\theta}(X_t) \right] dt + \sigma_t dW_t
+\]</div>
+<p>理论上，如果我们的训练能够实现数据分布的完美拟合，任意的一个 <span class="arithmatex">\(\sigma_t\)</span> 都能够为我们生成 <span class="arithmatex">\(X_1\sim p_\text{data}\)</span>. 但实际上，我们可能会遇到这样两种误差：</p>
+<ul>
+<li><strong>数值误差</strong>：SDE 的模拟并不完美；</li>
+<li><strong>训练误差</strong>：<span class="arithmatex">\(u_t^\theta\)</span> 不能和 target 百分百拟合。</li>
+</ul>
+<p>因此，在实操时，我们通常依据经验挑选一个合适的去噪系数。</p>
+<p>这个时候，有人可能会说，和 flow model 相比，diffusion model 需要一次训练两个参数，不是很麻烦吗？但事实上，我们通常把 <span class="arithmatex">\(s_t^\theta, u_t^\theta\)</span> 看做一个神经网络的两个输出，因此带来的额外计算开销是可以接受的。更进一步地，我们即将介绍 DDM，它直接解决了我们的这个问题。</p>
+<h2 id="去噪扩散模型-denoising-diffusion-models">去噪扩散模型 Denoising Diffusion Models<a class="headerlink" href="#去噪扩散模型-denoising-diffusion-models" title="Permanent link">&para;</a></h2>
+<p>下面，我们考虑高斯概率路径的特殊情形，引出<strong>去噪扩散模型（denoising diffusion models）。</strong></p>
+<p>同样地，我们首先考虑高斯概率路径下的得分匹配是怎么样的，我们只需要把特定的 <span class="arithmatex">\(\nabla\log p_t\)</span> 代入损失函数即可：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x|z) = - \frac{x - \alpha_t z}{\beta_t^2}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+\mathcal{L}_{\text{CSM}}(\theta) &amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} \left[ \left\| s_t^{\theta}(x) + \frac{x - \alpha_t z}{\beta_t^2} \right\|^2 \right] \\
+&amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, \epsilon \sim \mathcal{N}(0, I_d)} \left[ \left\| s_t^{\theta}(\alpha_t z + \beta_t \epsilon) + \frac{\epsilon}{\beta_t} \right\|^2 \right] \\
+&amp;= \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, \epsilon \sim \mathcal{N}(0, I_d)} \left[ \frac{1}{\beta_t^2} \left\| \beta_t s_t^{\theta}(\alpha_t z + \beta_t \epsilon) + \epsilon \right\|^2 \right]
+\end{align*}
+\]</div>
+<details class="info">
+<summary>关于 DSM 的由来</summary>
+<p>由于网络 <span class="arithmatex">\(s_t^\theta\)</span> 实质上是在学习预测用于扰乱数据样本 <span class="arithmatex">\(z\)</span> 的噪声，因此，上述训练损失也被称为<strong>去噪得分匹配（denoising score matching）</strong>，它是最早用于训练扩散模型的方法之一。</p>
+</details>
+<p>但我们很快意识到，当 <span class="arithmatex">\(\beta_t\approx0\)</span> 时，这个 loss 会带来数值爆炸的问题（即 DSM 只在加入足够噪声的时候才 work）。因此在一些 DDM 的实现中（例如 <strong>DDPM</strong>, Denoising Diffusion Probabilitic Models），<span class="arithmatex">\(\frac{1}{\beta_t^2}\)</span> 这一项被丢弃，同时我们把 <span class="arithmatex">\(s_t^\theta\)</span> 改造成了一个新的神经网络（我们称为<strong>噪声预测器</strong>，noise predictor）<span class="arithmatex">\(\epsilon_t^\theta:\mathbb{R}^d\times[0,1]\rightarrow\mathbb{R}^d\)</span>，然后就得到了如下结果：</p>
+<div class="arithmatex">\[
+- \beta_t s_t^{\theta}(x) = \epsilon_t^{\theta}(x) \quad \Rightarrow \quad \mathcal{L}_{\text{DDPM}}(\theta) = \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, \epsilon \sim \mathcal{N}(0, I_d)} [\| \epsilon_t^{\theta}(\alpha_t z + \beta_t \epsilon) - \epsilon \|^2]
+\]</div>
+<p><a class="glightbox" href="../img/image-20250724151424404.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250724151424404" src="../img/image-20250724151424404.webp" /></a></p>
+<p>这个新的 loss 非常简单，<strong>但更 magical 的点在于</strong>，我们只需要训练 <span class="arithmatex">\(s_t^\theta\)</span> 或者 <span class="arithmatex">\(\epsilon_t^\theta\)</span> 就够了，因为 <span class="arithmatex">\(u_t^\theta\)</span> 可以用它推导出来，反之亦然。下面我们就来尝试说明这一点（当然了，这一点只在高斯概率路径的前提下成立）。</p>
+<div class="arithmatex">\[
+\begin{align*}
+u_t^{\text{target}}(x|z) &amp;= \left( \dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t}\alpha_t \right) z + \frac{\dot{\beta}_t}{\beta_t}x \\
+&amp;\stackrel{(i)}{=} \left( \beta_t^2\frac{\dot{\alpha}_t}{\alpha_t} - \dot{\beta}_t\beta_t \right) \left( \frac{\alpha_t z - x}{\beta_t^2} \right) + \frac{\dot{\alpha}_t}{\alpha_t}x \\
+&amp;= \left( \beta_t^2\frac{\dot{\alpha}_t}{\alpha_t} - \beta_t\dot{\beta}_t \right) \nabla \log p_t(x|z) + \frac{\dot{\alpha}_t}{\alpha_t}x
+\end{align*}
+\]</div>
+<p>注意，<span class="arithmatex">\((i)\)</span> 中的推导只需要数学变形就能得到，不需要额外的定理。对于边际向量场 <span class="arithmatex">\(u_t^{\text{target}}(x)\)</span>，我们也有很类似的结论，在此不再推导。因此，我们有了如下<strong>非常漂亮的结论</strong>：</p>
+<div class="arithmatex">\[
+u_t^{\theta} = \left( \beta_t^2 \frac{\dot{\alpha}_t}{\alpha_t} - \dot{\beta}_t \beta_t \right) s_t^{\theta}(x) + \frac{\dot{\alpha}_t}{\alpha_t}x
+\]</div>
+<p>即这两个参数可以通过线性变化之间转换（注意，当我们考虑这里的参数 <span class="arithmatex">\(\theta\)</span> 时，可以把 <span class="arithmatex">\(t\)</span> 和 <span class="arithmatex">\(x\)</span> 看做常量）。因此，<strong>在高斯概率路径的情况下</strong>（注意这个前提条件），我们只需要训练一个参数（任意选择 flow matching 或者 score matching 的方法），就可以实现 SDE 的采样。例如，我们只需要训练 <span class="arithmatex">\(s_t^\theta\)</span>，就可以用如下方式来完成 sampling：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{\text{init}}, \quad dX_t = \left[ \left( \beta_t^2 \frac{\dot{\alpha}_t}{\alpha_t} - \dot{\beta}_t\beta_t + \frac{\sigma_t^2}{2} \right) s_t^{\theta}(x) + \frac{\dot{\alpha}_t}{\alpha_t}x \right] dt + \sigma_t dW_t
+\]</div>
+<h2 id="如何阅读-diffusion-model-的文献">如何阅读 Diffusion Model 的文献？<a class="headerlink" href="#如何阅读-diffusion-model-的文献" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">声明</p>
+<p>由于部分术语的中文翻译有些捉急/出戏，我们采用中英夹杂的方式来讲述这一部分的内容。</p>
+</div>
+<h3 id="离散时间-vs-连续时间">离散时间 vs 连续时间<a class="headerlink" href="#离散时间-vs-连续时间" title="Permanent link">&para;</a></h3>
+<p>早期的去噪扩散模型（DDPM），采用离散马尔可夫链，将时刻 <span class="arithmatex">\(t\)</span> 量化为整数：<span class="arithmatex">\(0, 1, 2, …\)</span>。这种做法直观易懂，但存在两个主要缺点：</p>
+<ol>
+<li>在训练前必须<strong>预先选定时间步数</strong>及其离散方案。</li>
+<li>使用 ELBO（evidence lower bound）近似优化目标，该下界在离散情形下<strong>并非严格等价于我们真正想最小化的损失</strong>。</li>
+</ol>
+<p>后来，我们发现，离散时间框架其实是对连续时间 SDE 的近似，而两者并没有本质意义上的不同。</p>
+<p>我们是采用的 SDE 构造方法在数学意义上更加简洁。</p>
+<h3 id="正向过程-vs-概率路径">"正向过程" vs 概率路径<a class="headerlink" href="#正向过程-vs-概率路径" title="Permanent link">&para;</a></h3>
+<p>先说结论：<strong>forward process 是构造（高斯）概率路径的特殊方式</strong>。</p>
+<p>它通常以 <strong>inverted time convention</strong> 的形式进行构造：</p>
+<div class="arithmatex">\[
+\bar{X}_0 = z, \quad d\bar{X}_t = u_t^{\text{forw}}(\bar{X}_t)dt + \sigma_t^{\text{forw}}d\bar{W}_t
+\]</div>
+<p>它的大致想法是在一开始选取一个数据点 <span class="arithmatex">\(z\sim p_\text{data}\)</span>，然后通过不断加噪声的方式来<strong>”污染“</strong>这个数据。而当 <span class="arithmatex">\(T\rightarrow∞\)</span>，它的分布会趋近 <span class="arithmatex">\(p_\text{data}\)</span>. 而这一想法和概率路径在本质上是一样的，唯一的区别是把路径反了过来，即变成了 <span class="arithmatex">\(\bar{X}_0 = z\)</span>.</p>
+<h3 id="时间反转-vs-fokker-planck-方程">时间反转 vs Fokker-Planck 方程<a class="headerlink" href="#时间反转-vs-fokker-planck-方程" title="Permanent link">&para;</a></h3>
+<p>我们有不同的构造 training target 的方式。在本文档的框架下，我们使用的是 Fokker-Planck equation (or Continuity equation) 的方式，但有其他方法是通过 <strong>time-reversal</strong> of the forward process 的方式来构造的。</p>
+<h3 id="流匹配与随机插值器">流匹配与随机插值器<a class="headerlink" href="#流匹配与随机插值器" title="Permanent link">&para;</a></h3>
+<p>我们在这里介绍的理解 diffusion 的框架和 <strong>flow matching &amp; stochastic interpolants (SIs)</strong> 的框架最为接近。</p>
+<p>在 flow matching 中，我们不需要 forward process 和 SDE 就能实现流模型的训练，也因为这一点，从流模型中的采样是确定性的（即除了初始分布 <span class="arithmatex">\(X_0\sim p_{\text{init}}\)</span> 是随机的，其他都是确定的）。</p>
+<p>而 stochastic interpolants 则同时包含了 pure flow 和 SDE extension (正如我们在上一节讲述的)。<strong>这个框架相比扩散模型这一单一说法而言更简洁也更具普遍性</strong>：我们可以实现从任意分布 <span class="arithmatex">\(p_\text{init}\)</span> 到任意分布 <span class="arithmatex">\(p_\text{data}\)</span> 的转换（而 denoising diffusion models 只能在高斯分布作为初始条件下才能 work）。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../lec2/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Lec2: Constructing a Training Target">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Lec2: Constructing a Training Target
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../lec4/" class="md-footer__link md-footer__link--next" aria-label="下一页: Lec4: Building an Image Generator">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Lec4: Building an Image Generator
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © HarryZ
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.footer", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.tracking", "navigation.path", "navigation.top", "toc.follow", "content.action.view", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.50899def.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/polyfill/index.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.js"></script>
+      
+        <script src="../../../javascripts/tablesort.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/tablesort/dist/tablesort.min.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>
