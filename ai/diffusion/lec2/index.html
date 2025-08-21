@@ -1,0 +1,1756 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="HarryZ">
+      
+      
+        <link rel="canonical" href="https://note.uqbarz.com/ai/diffusion/lec2/">
+      
+      
+        <link rel="prev" href="../lec1/">
+      
+      
+        <link rel="next" href="../lec3/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+    
+    
+      
+        <title>Lec2: Constructing a Training Target - HarryZ の Notebook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/theme.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/counter.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#constructing-a-training-target" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="HarryZ の Notebook" class="md-header__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HarryZ の Notebook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lec2: Constructing a Training Target
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="day" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="根据系统模式切换主题"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="根据系统模式切换主题" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+  🏡主页
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../system/" class="md-tabs__link">
+          
+  
+  
+  计算机系统
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../mlsys/" class="md-tabs__link">
+          
+  
+  
+  MLSys
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../papers/" class="md-tabs__link">
+          
+  
+  
+  论文阅读
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../misc/" class="md-tabs__link">
+          
+  
+  
+  杂项
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="HarryZ の Notebook" class="md-nav__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    HarryZ の Notebook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    🏡主页
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            🏡主页
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    计算机系统
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            计算机系统
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Computer Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MLSys
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            MLSys
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mlsys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Machine Learning Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    AI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            AI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deep Generative Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Diffusion
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec1: Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Lec2: Constructing a Training Target
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec2: Constructing a Training Target
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#动机" class="md-nav__link">
+    <span class="md-ellipsis">
+      动机
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件与边际概率路径" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件与边际概率路径
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件与边际向量场" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件与边际向量场
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件和边际得分函数" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件和边际得分函数
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#总结一下" class="md-nav__link">
+    <span class="md-ellipsis">
+      总结一下
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec3: Training Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec4: Building an Image Generator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    RL
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            RL
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    论文阅读
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            论文阅读
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Paper Reading
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MLSys
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            MLSys
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/blitzscale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    BlitzScale: Fast and Live Large Model Autoscaling with O(1) Host Caching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/cacheblend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/mooncake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mooncake: Trading More Storage for Less Computation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    杂项
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            杂项
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../misc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#动机" class="md-nav__link">
+    <span class="md-ellipsis">
+      动机
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件与边际概率路径" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件与边际概率路径
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件与边际向量场" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件与边际向量场
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#条件和边际得分函数" class="md-nav__link">
+    <span class="md-ellipsis">
+      条件和边际得分函数
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#总结一下" class="md-nav__link">
+    <span class="md-ellipsis">
+      总结一下
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+    
+      
+    
+    <a href="https://github.com/hharryz/hharryz.github.io/raw/main/docs/ai/diffusion/lec2.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="constructing-a-training-target">Constructing a Training Target<a class="headerlink" href="#constructing-a-training-target" title="Permanent link">&para;</a></h1>
+<details class="warning" open="open">
+<summary>预告</summary>
+<p>本节的难度可能很大。只能勉强懂个大概🥵</p>
+</details>
+<h2 id="动机">动机<a class="headerlink" href="#动机" title="Permanent link">&para;</a></h2>
+<p>在上一节，我们介绍了如何通过模拟 ODE/SDE 来构建流模型和扩散模型：</p>
+<div class="arithmatex">\[
+\begin{align*}
+X_0 \sim p_{\text{init}}, \quad \text{d}X_t = u_t^{\theta}(X_t)\text{d}t \quad &amp;(\text{Flow model}) \\
+X_0 \sim p_{\text{init}}, \quad \text{d}X_t = u_t^{\theta}(X_t)\text{d}t + \sigma_t \text{d}W_t \quad &amp;(\text{Diffusion model})
+\end{align*}
+\]</div>
+<p>其中，<span class="arithmatex">\(u_t^\theta\)</span> 是一个神经网络。接下来的问题在于，我们要如何训练这个神经网络呢？例如，在机器学习中，对于每一个 <span class="arithmatex">\(u_t^\theta(x)\)</span>，我们都需要一个 target 与之对应，然后我们可以用均方误差 (mean-squared error) 来衡量预测值和真实值之间的差距，并把它作为损失函数尝试进行最小化。</p>
+<div class="arithmatex">\[
+\mathcal{L}(\theta) = \| u_t^{\theta}(x) - \underbrace{u_t^{\text{target}}(x)}_{\text{training target}} \|^2
+\]</div>
+<p>在本节中，我们将聚焦 <span class="arithmatex">\(u_t^{\text{target}}(x)\)</span>，找到与之对应的等式；在下一节中，我们将设计一个训练算法来拟合这个 target. 本节的目标就是为 target 推导出一个公式，使得与之对应的 ODE/SDE 能够把数据分布从 <span class="arithmatex">\(p_\text{init}\)</span> 转换到 <span class="arithmatex">\(p_\text{data}\)</span>.</p>
+<h2 id="条件与边际概率路径">条件与边际概率路径<a class="headerlink" href="#条件与边际概率路径" title="Permanent link">&para;</a></h2>
+<p><strong>条件概率路径</strong>（conditional probability path）用于描述一个从初始分布到目标点的概率演化路径。</p>
+<div class="admonition info">
+<p class="admonition-title">一些定义</p>
+<ul>
+<li>
+<p>对于一个数据点 <span class="arithmatex">\(z\in\mathbb{R}^d\)</span> ，我们定义 <span class="arithmatex">\(\delta_z\)</span> 为 狄拉克 (Dirac delta) 分布，从 <span class="arithmatex">\(\delta_z\)</span> 的采样永远返回 <span class="arithmatex">\(z\)</span>，它表示“确定性分布”，即概率 100% 集中在点 <span class="arithmatex">\(z\)</span> 上。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(p_t(\cdot | z)\)</span>：表示<strong>给定最终状态 <span class="arithmatex">\(z\)</span></strong> 后，在时间 <span class="arithmatex">\(t \in [0,1]\)</span> 上的<strong>条件概率分布路径</strong>。它是一个以 <span class="arithmatex">\(t\)</span> 为参数的<strong>条件分布流</strong>（conditional distribution flow）。</p>
+</li>
+<li><span class="arithmatex">\(p_{\text{init}}\)</span>：某个固定的初始分布，比如高斯分布 <span class="arithmatex">\(\mathcal{N}(0, I)\)</span>，表示“无信息状态”或“起点”。</li>
+</ul>
+</div>
+<p>一个条件概率路径是在 <span class="arithmatex">\(\mathbb{R}^d\)</span> 上的一组分布 <span class="arithmatex">\(p_t(x|z)\)</span>，它满足：</p>
+<div class="arithmatex">\[
+p_0(\cdot|z) = p_{\text{init}}, \quad p_1(\cdot|z) = \delta_z \quad \text{for all } z \in \mathbb{R}^d.
+\]</div>
+<div class="admonition info">
+<p class="admonition-title">如何理解这些条件</p>
+<p>第一个条件：<span class="arithmatex">\(p_0(\cdot | z) = p_{\text{init}}\)</span>​，它表示在时间 <span class="arithmatex">\(t = 0\)</span> 时，不管最终我们想达到什么点 <span class="arithmatex">\(z\)</span>，<strong>初始分布总是固定的</strong> <span class="arithmatex">\(p_{\text{init}}\)</span>。也就是说，我们从相同的随机分布起步。</p>
+<p>第二个条件：<span class="arithmatex">\(p_1(\cdot | z) = \delta_z\)</span> 意思是在时间 <span class="arithmatex">\(t = 1\)</span> 时，给定目标点 <span class="arithmatex">\(z\)</span>，我们的条件分布“收敛”为只在 <span class="arithmatex">\(z\)</span> 上有概率质量的点分布。即，这个路径一定最终走到 <span class="arithmatex">\(z\)</span>。</p>
+<p>这说明<strong>我们可以为每个目标点 <span class="arithmatex">\(z\)</span> 构造一条从噪声开始最终走到 <span class="arithmatex">\(z\)</span> 的概率轨迹</strong>。</p>
+</div>
+<p>每个条件概率路径 <span class="arithmatex">\(p_t(x|z)\)</span> 都可以引出一条边际概率路径 <span class="arithmatex">\(p_t(x)\)</span>：</p>
+<div class="arithmatex">\[
+\begin{align*}
+z \sim p_{\text{data}}, \quad x \sim p_t(\cdot|z) \Rightarrow x \sim p_t \quad &amp;\blacktriangleright \text{ sampling from marginal path} \\
+p_t(x) = \int p_t(x|z)p_{\text{data}}(z)\text{d}z \quad &amp;\blacktriangleright \text{ density of marginal path}
+\end{align*}
+\]</div>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>首先从数据分布中采样一个真实样本 <span class="arithmatex">\(z \sim p_{\text{data}}\)</span>，然后，从给定这个 <span class="arithmatex">\(z\)</span> 的条件分布路径中采样 <span class="arithmatex">\(x \sim p_t(\cdot|z)\)</span>，那么，最终得到的 <span class="arithmatex">\(x\)</span> 的分布就是<strong>边际分布路径</strong> <span class="arithmatex">\(p_t\)</span>。</p>
+<p>我们可以把 <span class="arithmatex">\(p_t(\cdot|z)\)</span> 看作从 <span class="arithmatex">\(z\)</span> 发出的一条“模糊轨道”，每个 <span class="arithmatex">\(z\)</span> 都产生自己的条件路径；所有 <span class="arithmatex">\(z \sim p_{\text{data}}\)</span> 产生的路径加在一起，构成了 <span class="arithmatex">\(p_t\)</span>。</p>
+<p>而当我们把它用概率密度的方式写出来，可以应用如下公式：</p>
+<div class="arithmatex">\[
+p(x) = \int p(x|z)p(z)dz
+\]</div>
+</div>
+<p>这个公式说明：当前时刻 <span class="arithmatex">\(t\)</span> 上，边际分布 <span class="arithmatex">\(p_t(x)\)</span> 的形状是所有“从 <span class="arithmatex">\(z \sim p_{\text{data}}\)</span> 向外扩散的路径”在 <span class="arithmatex">\(x\)</span> 处的综合叠加。</p>
+<p>我们可以这样理解，边际概率路径 <span class="arithmatex">\(p_t\)</span> 事实上就是在 <span class="arithmatex">\(p_\text{init}\)</span> 和 <span class="arithmatex">\(p_\text{data}\)</span> 上的插值：</p>
+<div class="arithmatex">\[
+p_0 = p_{\text{init}} \quad \text{and} \quad p_1 = p_{\text{data}}. \quad \blacktriangleright \text{ noise-data interpolation}
+\]</div>
+<div class="admonition note">
+<p class="admonition-title">高斯条件概率路径</p>
+<p>高斯概率路径就是去噪扩散模型 (denoising diffusion models) 使用的概率路径。我们定义 <span class="arithmatex">\(\alpha_t, \beta_t\)</span> 为噪声调度器，这是两个连续可微的单调函数，并满足 <span class="arithmatex">\(\alpha_0=\beta_1=0, \alpha_1=\beta_0=1\)</span>。然后我们定义条件概率路径如下：</p>
+<div class="arithmatex">\[
+p_t(\cdot|z) = \mathcal{N}(\alpha_t z, \beta_t^2 I_d) \quad \blacktriangleright \text{ Gaussian conditional path}
+\]</div>
+<p>我们发现，它满足我们之前对条件概率路径的要求：</p>
+<div class="arithmatex">\[
+p_0(\cdot|z) = \mathcal{N}(\alpha_0 z, \beta_0^2 I_d) = \mathcal{N}(0, I_d), \quad \text{and} \quad p_1(\cdot|z) = \mathcal{N}(\alpha_1 z, \beta_1^2 I_d) = \delta_z
+\]</div>
+<p>接下来，我们可以用以下方式进行采样：</p>
+<div class="arithmatex">\[
+z \sim p_{\text{data}}, \quad \epsilon \sim p_{\text{init}} = \mathcal{N}(0, I_d) \Rightarrow x = \alpha_t z + \beta_t \epsilon \sim p_t \quad \blacktriangleright \text{ sampling from marginal Gaussian path}
+\]</div>
+<p>在越接近 <span class="arithmatex">\(t=0\)</span> 的地方，这个过程加入的噪声更多，直到我们只剩下噪声。我们可以从下图直观地感受到条件概率路径和边际概率路径在高斯分布下的采样过程：</p>
+<p><a class="glightbox" href="../img/image-20250723161022809.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250723161022809" src="../img/image-20250723161022809.webp" /></a></p>
+</div>
+<h2 id="条件与边际向量场">条件与边际向量场<a class="headerlink" href="#条件与边际向量场" title="Permanent link">&para;</a></h2>
+<p>首先，我们定义条件向量场 (conditional vector field) <span class="arithmatex">\(u_t^{\text{target}}(\cdot|z)\)</span>。它是为一个单一的数据点 <span class="arithmatex">\(z\)</span> 服务的向量场，它的作用是驱动一个从初始噪声分布 <span class="arithmatex">\(p_\text{init}\)</span> 出发的 ODE，让它在时间 <span class="arithmatex">\(t\)</span> 的分布恰好为前面定义的条件概率路径 <span class="arithmatex">\(p_t(\cdot|z)\)</span>. 我们可以用如下的形式化方式来表示条件向量场：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{\text{init}}, \quad \frac{\text{d}}{\text{d}t}X_t = u_t^{\text{target}}(X_t|z) \quad \Rightarrow \quad X_t \sim p_t(\cdot|z) \quad (0 \le t \le 1).
+\]</div>
+<div class="admonition note">
+<p class="admonition-title">高斯概率路径的目标 ODE</p>
+<p>接下来，我们给出高斯概率路径下的向量场，作为理解上述内容的一个例子。如上一个例子中定义的 <span class="arithmatex">\(\alpha_t, \beta_t\)</span>，我们可以得到（其中 <span class="arithmatex">\(\dot{\alpha}_t = \partial_t \alpha_t\)</span>，<span class="arithmatex">\(\dot{\beta}_t = \partial_t \beta_t\)</span>）：</p>
+<div class="arithmatex">\[
+u_t^{\text{target}}(x|z) = \left( \dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t}\alpha_t \right) z + \frac{\dot{\beta}_t}{\beta_t}x
+\]</div>
+<p>我们可以用这个向量场定义的 ODE 来模拟轨迹，它和实际的条件概率路径是相符合的。</p>
+<p><a class="glightbox" href="../img/image-20250723170335157.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250723170335157" src="../img/image-20250723170335157.webp" /></a></p>
+</div>
+<p>接下来，我们介绍<strong>边际化技巧</strong>。根据上述的条件向量场 <span class="arithmatex">\(u_t^{\text{target}}(\cdot|z)\)</span>，我们可以用如下公式计算边际向量场 <span class="arithmatex">\(u_t^{\text{target}}(x)\)</span> ：</p>
+<div class="arithmatex">\[
+u_t^{\text{target}}(x) = \int u_t^{\text{target}}(x|z) \frac{p_t(x|z)p_{\text{data}}(z)}{p_t(x)} \text{d}z
+\]</div>
+<p>得到的向量场拥有如下性质：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{\text{init}}, \quad \frac{\text{d}}{\text{d}t}X_t = u_t^{\text{target}}(X_t) \quad \Rightarrow \quad X_t \sim p_t \quad (0 \le t \le 1)
+\]</div>
+<p>在这里，我们不给出具体的证明（<del>其实我也没看懂，所以给不出</del>），而是解释这个定理的意义。</p>
+<div class="admonition info">
+<p class="admonition-title">如何理解边际化技巧</p>
+<p>我们的 training target 是 <span class="arithmatex">\(u_t^{\text{target}}\)</span>，它实现从噪声 <span class="arithmatex">\(p_{\text{init}}\)</span> 到真实数据 <span class="arithmatex">\(p_{\text{data}}\)</span> 的转换。</p>
+<p>而边际向量场本身是很难直接得到的，相对而言，条件向量场是可以通过简单计算得到的。这个定理帮助我们完成了<strong>从条件向量场到边际向量场</strong>的转换，即我们只需要找到满足条件的条件向量场，就能计算得到与之对应的边际向量场。</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">连续性方程 (continuity equation)</p>
+<p>如果要从数学上严格证明边际化技巧，我们需要用到<strong>连续性方程</strong>。</p>
+<p>它描述了在一个向量场的作用下，概率密度的变化与该向量场的散度（divergence）之间的关系 。</p>
+<div class="arithmatex">\[
+\partial_t p_t(x) = -\text{div}(p_t u_t^{\text{target}})(x) \quad \text{for all } x \in \mathbb{R}^d, 0 \le t \le 1.
+\]</div>
+<p>具体内容暂时省略。</p>
+</div>
+<h2 id="条件和边际得分函数">条件和边际得分函数<a class="headerlink" href="#条件和边际得分函数" title="Permanent link">&para;</a></h2>
+<p>接下来，我们要把为流模型（ODE）建立的框架<strong>扩展到随机性更强的扩散模型（SDE）</strong>，利用 SDE 扩展技巧，把上面的 training target <span class="arithmatex">\(u_t^{\text{target}}\)</span> 扩展到 SDE，构造出一个遵循相同概率路径的 SDE。</p>
+<p>为了实现这一点，我们首先介绍得分函数 (score function)：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x)
+\]</div>
+<p>如上则为我们需要的得分函数，但是这是边际得分函数，和上面类似，直接计算得到它是比较困难的，因此我们希望能把它和条件得分函数建立联系，其中后者更容易直接得到。</p>
+<div class="admonition note">
+<p class="admonition-title">一个条件得分函数的🌰</p>
+<p>在这里，我们依旧以高斯概率路径为例，计算得到它的得分函数。对于高斯路径 <span class="arithmatex">\(p_t(x|z) = \mathcal{N}(x; \alpha_t z, \beta_t^2 I_d)\)</span>，我们代入它的高斯密度函数即可得到：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x|z) = \nabla \log \mathcal{N}(x; \alpha_t z, \beta_t^2 I_d) = -\frac{x - \alpha_t z}{\beta_t^2}.
+\]</div>
+</div>
+<p>接下来，我们推导条件和边际得分函数之间的关系。其中，我们需要用到 <span class="arithmatex">\(\log\)</span> 函数的求导公式 <span class="arithmatex">\(\nabla \log f(x)=\frac{\nabla f(x)}{x}\)</span>：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x) = \frac{\nabla p_t(x)}{p_t(x)} = \frac{\nabla \int p_t(x|z)p_{\text{data}}(z)\text{d}z}{p_t(x)} = \frac{\int \nabla p_t(x|z)p_{\text{data}}(z)\text{d}z}{p_t(x)} = \int \nabla \log p_t(x|z) \frac{p_t(x|z)p_{\text{data}}(z)}{p_t(x)} \text{d}z
+\]</div>
+<p>这样一来，我们就建立了两者之间的关系。有了这个铺垫，我们引出下面的定理 <strong>SDE Extention Trick</strong>.</p>
+<div class="arithmatex">\[
+\begin{align*}
+X_0 &amp;\sim p_{\text{init}}, \quad \text{d}X_t = \left[ u_t^{\text{target}}(X_t) + \frac{\sigma_t^2}{2}\nabla \log p_t(X_t) \right]\text{d}t + \sigma_t \text{d}W_t \\
+\Rightarrow X_t &amp;\sim p_t \quad (0 \le t \le 1)
+\end{align*}
+\]</div>
+<div class="admonition info">
+<p class="admonition-title">如何理解这个 trick</p>
+<p>我们可以这样感性地理解这个公式，当我们在原来的基础上加入了 diffusion 噪声扰动后，需要另外引入一个修正项对我们的 target 进行修正，而这个修正项正是我们刚刚介绍的得分函数。</p>
+<p>对于这个 SDE 满足的分布，特别地，我们可以得到，<span class="arithmatex">\(X_1\sim p_\text{data}\)</span>.</p>
+</div>
+<h2 id="总结一下">总结一下<a class="headerlink" href="#总结一下" title="Permanent link">&para;</a></h2>
+<p><strong>流模型（flow）的训练目标是边际向量场 <span class="arithmatex">\(u_t^{target}\)</span> 。</strong>为了构建它，我们首先选择一个条件概率路径 <span class="arithmatex">\(p_t(x|z)\)</span>，该路径需满足 <span class="arithmatex">\(p_0(\cdot|z)=p_{init}\)</span> 和 <span class="arithmatex">\(p_1(\cdot|z)=\delta_z\)</span> 。接下来，我们找到一个条件向量场 <span class="arithmatex">\(u_t^{flow}(x|z)\)</span>，使得其对应的流 <span class="arithmatex">\(\psi_t^{target}(x|z)\)</span> 满足：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{init} \quad \Rightarrow \quad X_t = \psi_t^{target}(X_0|z) \sim p_t(\cdot|z)
+\]</div>
+<p>或者等价地，让 <span class="arithmatex">\(u_t^{target}\)</span> 满足连续性方程。然后，由下式定义的边际向量场：</p>
+<div class="arithmatex">\[
+u_t^{target}(x) = \int u_t^{target}(x|z) \frac{p_t(x|z)p_{data}(z)}{p_t(x)} dz
+\]</div>
+<p>就能遵循边际概率路径，即：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{init}, \quad dX_t = u_t^{target}(X_t)dt \quad \Rightarrow \quad X_t \sim p_t \quad (0 \le t \le 1)
+\]</div>
+<p>特别地，对于这个ODE，有 <span class="arithmatex">\(X_1 \sim p_{data}\)</span>，因此 <span class="arithmatex">\(u_t^{target}\)</span> 按预期“将噪声转换为了数据”。</p>
+<p><strong>接下来，我们把 ODE 扩展到 SDE。</strong>对于一个随时间变化的扩散系数 <span class="arithmatex">\(\sigma_t \ge 0\)</span>，我们可以将上述ODE扩展为一个具有相同边际概率路径的SDE：</p>
+<div class="arithmatex">\[
+X_0 \sim p_{init}, \quad dX_t = \left[u_t^{target}(X_t) + \frac{\sigma_t^2}{2} \nabla \log p_t(X_t)\right]dt + \sigma_t dW_t \quad \Rightarrow \quad X_t \sim p_t \quad (0 \le t \le 1)
+\]</div>
+<p>其中 <span class="arithmatex">\(\nabla \log p_t(x)\)</span> 是边际得分函数：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x) = \int \nabla \log p_t(x|z) \frac{p_t(x|z)p_{data}(z)}{p_t(x)} dz
+\]</div>
+<p>一个重要的例子是<strong>高斯概率路径</strong>，它产生了以下公式：</p>
+<div class="arithmatex">\[
+\begin{align*}
+p_t(x|z) &amp;= \mathcal{N}(x; \alpha_t z, \beta_t^2 I_d) \\
+u_t^{flow}(x|z) &amp;= \left(\dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t}\alpha_t\right)z + \frac{\dot{\beta}_t}{\beta_t}x \\
+\nabla \log p_t(x|z) &amp;= -\frac{x - \alpha_t z}{\beta_t^2}
+\end{align*}
+\]</div>
+<p>这些公式适用于噪声调度器 <span class="arithmatex">\(\alpha_t, \beta_t \in \mathbb{R}\)</span>，它们是连续可微的单调函数，并满足 <span class="arithmatex">\(\alpha_0 = \beta_1 = 0\)</span> 和 <span class="arithmatex">\(\alpha_1 = \beta_0 = 1\)</span>。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../lec1/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Lec1: Flow and Diffusion Models">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Lec1: Flow and Diffusion Models
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../lec3/" class="md-footer__link md-footer__link--next" aria-label="下一页: Lec3: Training Flow and Diffusion Models">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Lec3: Training Flow and Diffusion Models
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © HarryZ
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.footer", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.tracking", "navigation.path", "navigation.top", "toc.follow", "content.action.view", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/polyfill/index.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.js"></script>
+      
+        <script src="../../../javascripts/tablesort.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/tablesort/dist/tablesort.min.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>

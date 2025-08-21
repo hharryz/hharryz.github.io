@@ -1,0 +1,1846 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="HarryZ">
+      
+      
+        <link rel="canonical" href="https://note.uqbarz.com/ai/diffusion/lec4/">
+      
+      
+        <link rel="prev" href="../lec3/">
+      
+      
+        <link rel="next" href="../../rl/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+    
+    
+      
+        <title>Lec4: Building an Image Generator - HarryZ の Notebook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/theme.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/counter.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#building-an-image-generator" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="HarryZ の Notebook" class="md-header__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HarryZ の Notebook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lec4: Building an Image Generator
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="slate" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="day" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="根据系统模式切换主题"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="根据系统模式切换主题" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+  🏡主页
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../system/" class="md-tabs__link">
+          
+  
+  
+  计算机系统
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../mlsys/" class="md-tabs__link">
+          
+  
+  
+  MLSys
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../papers/" class="md-tabs__link">
+          
+  
+  
+  论文阅读
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../misc/" class="md-tabs__link">
+          
+  
+  
+  杂项
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="HarryZ の Notebook" class="md-nav__button md-logo" aria-label="HarryZ の Notebook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    HarryZ の Notebook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hharryz/hharryz.github.io" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hharryz.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    🏡主页
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            🏡主页
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    计算机系统
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            计算机系统
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Computer Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MLSys
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            MLSys
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mlsys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Machine Learning Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    AI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            AI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deep Generative Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Diffusion
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec1: Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec2: Constructing a Training Target
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lec3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec3: Training Flow and Diffusion Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Lec4: Building an Image Generator
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lec4: Building an Image Generator
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#引导-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      引导 Guidance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="引导 Guidance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#流模型" class="md-nav__link">
+    <span class="md-ellipsis">
+      流模型
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#扩散模型" class="md-nav__link">
+    <span class="md-ellipsis">
+      扩散模型
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#神经网络架构" class="md-nav__link">
+    <span class="md-ellipsis">
+      神经网络架构
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="神经网络架构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#u-net" class="md-nav__link">
+    <span class="md-ellipsis">
+      U-Net
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dit" class="md-nav__link">
+    <span class="md-ellipsis">
+      DiT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#编码-guiding-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      编码 Guiding Variable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    RL
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            RL
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    论文阅读
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            论文阅读
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Paper Reading
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MLSys
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            MLSys
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/blitzscale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    BlitzScale: Fast and Live Large Model Autoscaling with O(1) Host Caching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/cacheblend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../papers/mooncake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mooncake: Trading More Storage for Less Computation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    杂项
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            杂项
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../misc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Index
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#引导-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      引导 Guidance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="引导 Guidance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#流模型" class="md-nav__link">
+    <span class="md-ellipsis">
+      流模型
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#扩散模型" class="md-nav__link">
+    <span class="md-ellipsis">
+      扩散模型
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#神经网络架构" class="md-nav__link">
+    <span class="md-ellipsis">
+      神经网络架构
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="神经网络架构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#u-net" class="md-nav__link">
+    <span class="md-ellipsis">
+      U-Net
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dit" class="md-nav__link">
+    <span class="md-ellipsis">
+      DiT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#编码-guiding-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      编码 Guiding Variable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+    
+      
+    
+    <a href="https://github.com/hharryz/hharryz.github.io/raw/main/docs/ai/diffusion/lec4.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="building-an-image-generator">Building an Image Generator<a class="headerlink" href="#building-an-image-generator" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>在之前的章节中，我们探讨了如何训练一个流匹配或扩散模型。接下来，我们将探讨如何使用这一框架来构建图像/视频生成器（例如 Stable Diffusion）。在这一建模过程中，我们主要需要解决如下两个问题：</p>
+<ul>
+<li>如何让我们生成的模型匹配特定的文本提示词，即实现条件生成（conditional generation）；</li>
+<li>如何让我们现有的目标以合适的方式来适配它。</li>
+</ul>
+</div>
+<h2 id="引导-guidance">引导 Guidance<a class="headerlink" href="#引导-guidance" title="Permanent link">&para;</a></h2>
+<p>到目前为止，我们的生成模型都是<strong>无条件的</strong> (unconditional)，即它会任意地生成一张图片。但我们期望它能生成关于特定内容的图片。形式化地来说，我们希望一个生成式模型输入一段文本提示词 <span class="arithmatex">\(y\)</span>，它能够基于这个条件 <span class="arithmatex">\(y\)</span> 生成一张对应的图片 <span class="arithmatex">\(x\)</span>，即我们希望从 <span class="arithmatex">\(p_\text{data}(x|y)\)</span> 中采样，让得到的数据分布根据 <span class="arithmatex">\(y\)</span> 发生变化。而对于 <span class="arithmatex">\(y\)</span> 来说，我们可以把它想象成一个新的分布空间 <span class="arithmatex">\(\mathcal{Y}\)</span>，如果 <span class="arithmatex">\(y\)</span> 是一段文本，那么它可能来自某一连续空间 <span class="arithmatex">\(\mathbb{R}^{d_y}\)</span>；如果 <span class="arithmatex">\(y\)</span> 是某一离散的类标签，那么它可能是像 <span class="arithmatex">\(\mathcal{Y}=\{0, 1, 2, ..., 9\}\)</span> 这样的离散集合。</p>
+<div class="admonition warning">
+<p class="admonition-title">关于 Guided 和 Conditional 的说明</p>
+<p>由于在之前我们已经有了条件向量场的概念，为了区分，我们用“引导”一词来表示以 <span class="arithmatex">\(y\)</span> 为条件进行采样的动作。因此我们有了引导向量场 <span class="arithmatex">\(u_t^\text{target}(x|y)\)</span> 和条件向量场 <span class="arithmatex">\(u_t^\text{target}(x|z)\)</span>。</p>
+</div>
+<p>为了实现引导向量 <span class="arithmatex">\(y\)</span> 的作用，我们需要修改现有的神经网络，为它添加一个新的参数，于是我们得到了引导向量场 <span class="arithmatex">\(u_t^\theta(\cdot|y)\)</span> 和一个与时间相关的去噪系数:</p>
+<div class="arithmatex">\[
+\begin{align*}
+\textbf{Neural network:}&amp; \quad u^{\theta} : \mathbb{R}^d \times \mathcal{Y} \times [0,1] \to \mathbb{R}^d, \quad (x,y,t) \mapsto u_t^{\theta}(x|y) \\
+\textbf{Fixed:}&amp; \quad \sigma_t : [0,1] \to [0, \infty), \quad t \mapsto \sigma_t
+\end{align*}
+\]</div>
+<p>于是，我们最终可以形成如下的采样流程：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\textbf{Initialization:} &amp; \quad X_0 \sim p_{\text{init}} &amp;&amp; \quad \triangleright \text{ Initialize with simple distribution (such as a Gaussian)} \\
+\textbf{Simulation:} &amp; \quad dX_t = u_t^{\theta}(X_t|y)dt + \sigma_t dW_t &amp;&amp; \quad \triangleright \text{ Simulate SDE from } t=0 \text{ to } t=1. \\
+\textbf{Goal:} &amp; \quad X_1 \sim p_{\text{data}}(\cdot|y) &amp;&amp; \quad \triangleright \text{ Goal is for } X_1 \text{ to be distributed like } p_{\text{data}}(\cdot|y).
+\end{align*}
+\]</div>
+<h3 id="流模型">流模型<a class="headerlink" href="#流模型" title="Permanent link">&para;</a></h3>
+<p>在流模型中，我们可以得到如下的 loss function：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{CFM}}^{\text{guided}}(\theta) = \mathbb{E}_{(z,y) \sim p_{\text{data}}(z,y), t \sim \text{Unif}[0,1), x \sim p_t(\cdot|z)} \| u_t^{\theta}(x|y) - u_t^{\text{target}}(x|z) \|^2
+\]</div>
+<p>我们可以观察到，<strong>除了数据的采样方式发生了变化，公式本身并没有发生变化</strong>，下面我们对这一点进行解释。</p>
+<div class="admonition note">
+<p class="admonition-title">解释</p>
+<p>我们可以想象，当我们固定了 <span class="arithmatex">\(y\)</span>，并从 <span class="arithmatex">\(p_\text{data}(x|y)\)</span> 中进行采样，它只改变了<strong>从数据集中进行采样的过程</strong>，当数据确定，它并不会影响 <span class="arithmatex">\(p_t(\cdot|z)\)</span> 这一条件概率路径的分布。</p>
+<p>因此，我们可以换一个视角，把“基于引导进行采样”的动作看做从一个新的联合数据分布中进行采样的过程，即公式中的 <span class="arithmatex">\((z,y) \sim p_{\text{data}}\)</span>。从实践的角度，相当于实现一个 PyTorch 中的 dataloader，它同时返回 <span class="arithmatex">\(z, y\)</span>。</p>
+</div>
+<p>接下来，我们要介绍<strong>无分类器引导</strong> (classifier-free guidance)。</p>
+<p>尽管上述的训练方式在理论上可行，但在实际情况下，我们发现用这个方式训练出来的模型并不能生成与标签 <span class="arithmatex">\(y\)</span> 符合很好的图片。我们发现，当我们人工地增强 <span class="arithmatex">\(y\)</span> 的引导作用，模型的质量会有所提升。在现在的 SOTA 模型中，我们引入了<strong>无分类器引导</strong>的技术，接下来我们就来介绍这一方法。</p>
+<p>之前我们已经讨论过在高斯概率路径的情况下，条件向量场 <span class="arithmatex">\(u_t^{\text{target}}(x|y)\)</span> 可以用如下公式直接书写出来（注意区别，之前是在 <span class="arithmatex">\(z\)</span> 的情况下，现在变成了 <span class="arithmatex">\(y\)</span>）：</p>
+<div class="arithmatex">\[
+u_t^{\text{target}}(x|y) = a_t x + b_t \nabla \log p_t(x|y)
+\]</div>
+<p>其中：</p>
+<div class="arithmatex">\[
+(a_t, b_t) = \left( \frac{\dot{\alpha}_t}{\alpha_t}, \frac{\dot{\alpha}_t \beta_t^2 - \dot{\beta}_t \beta_t \alpha_t}{\alpha_t} \right)
+\]</div>
+<p>接下来，我们对这个公式应用贝叶斯公式，可以把引导分数重写如下：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\nabla \log p_t(x|y) &amp;= \nabla \log \left( \frac{p_t(x)p_t(y|x)}{p_t(y)} \right) \\
+&amp;= \nabla \log p_t(x) + \nabla \log p_t(y|x) - \nabla \log p_t(y) \\
+&amp;\stackrel{(i)}{=} \nabla \log p_t(x) + \nabla \log p_t(y|x)
+\end{align*}
+\]</div>
+<p>在 conditional 的情况下，<span class="arithmatex">\(y\)</span> 可以看作向量，因此我们可以在 <span class="arithmatex">\((i)\)</span> 中直接去掉关于 <span class="arithmatex">\(y\)</span> 的梯度项。于是，我们可以重写条件向量场公式：</p>
+<div class="arithmatex">\[
+u_t^{\text{target}}(x|y) = a_t x + b_t(\nabla \log p_t(x) + \nabla \log p_t(y|x)) = u_t^{\text{target}}(x) + b_t \nabla \log p_t(y|x)
+\]</div>
+<p>这个公式可以被这样解读：它由<strong>无引导的条件向量场</strong>和<strong>条件引导下的分数组成</strong>。由于我们的经验结果发现引导 <span class="arithmatex">\(y\)</span> 的作用有待增强，因此我们可以通过放大后一项的作用来实现想要的效果：</p>
+<div class="arithmatex">\[
+\tilde{u}_t(x|y) = u_t^{\text{target}}(x) + wb_t \nabla \log p_t(y|x)
+\]</div>
+<p>其中，<span class="arithmatex">\(w\gt 1\)</span> 是<strong>引导缩放系数</strong> (guidance scale)。这一经验公式在实践中可以获得比原来更好的效果。</p>
+<div class="admonition note">
+<p class="admonition-title">既然说分类器引导，那么分类器在哪里？</p>
+<p>事实上，<span class="arithmatex">\(\log p_t(y|x)\)</span> 可以被看作是一个分类器：我们可以把每一个 <span class="arithmatex">\(y\)</span> 看作一个类别，当我们给定一个 <span class="arithmatex">\(x\)</span> (这里的 <span class="arithmatex">\(x\)</span> 就是噪声数据)，这个分数的计算结果就是把 <span class="arithmatex">\(x\)</span> 装入某个特定的 <span class="arithmatex">\(y\)</span> 的概率，即某种意义上的<strong>”分类“</strong>。</p>
+</div>
+<p>接下来，我们对上面的公式进行进一步的变形。我们再次应用如下变换：</p>
+<div class="arithmatex">\[
+\nabla \log p_t(x|y) = \nabla \log p_t(x) + \nabla \log p_t(y|x)
+\]</div>
+<p>就可以把 <span class="arithmatex">\(\tilde{u}_t(x|y)\)</span> 变换如下：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\tilde{u}_t(x|y) &amp;= u_t^{\text{target}}(x) + wb_t \nabla \log p_t(y|x) \\
+&amp;= u_t^{\text{target}}(x) + wb_t(\nabla \log p_t(x|y) - \nabla \log p_t(x)) \\
+&amp;= u_t^{\text{target}}(x) - (wa_t x + wb_t \nabla \log p_t(x)) + (wa_t x + wb_t \nabla \log p_t(x|y)) \\
+&amp;= (1-w)u_t^{\text{target}}(x) + wu_t^{\text{target}}(x|y)
+\end{align*}
+\]</div>
+<p>于是乎，我们有了理解 <span class="arithmatex">\(\tilde{u}_t(x|y)\)</span> 的全新视角——它是对无引导向量场 <span class="arithmatex">\(u_t^{\text{target}}(x)\)</span> 和引导向量场 <span class="arithmatex">\(wu_t^{\text{target}}(x|y)\)</span> 的<strong>线性组合</strong>。因此，我们只需要分别训练得到两个向量场就可以了。不过实际上，<strong>我们并不需要分开训练两个模型</strong>。我们可以在所有的标签 <span class="arithmatex">\(y\)</span> 之余设计一个新的标签 <span class="arithmatex">\(\varnothing\)</span>，它的含义是<strong>“无引导”</strong>。这样一来，我们就可以得到 <span class="arithmatex">\(u_t^{\text{target}}(x)=u_t^{\text{target}}(x|\varnothing)\)</span> 然后把两个模型的训练统一起来。这种把有条件和无条件的模型以相同的形式训练的方式就被称为 <strong>CFG</strong> (classifier-free guidance).</p>
+<div class="admonition info">
+<p class="admonition-title">注意</p>
+<p>值得说明的是，尽管我们在高斯概率路径的语境下推导除了这个公式，但是<strong>它对任意概率路径都是成立的</strong>。</p>
+</div>
+<p>接下来，我们说明 CFG 的模型应该如何进行训练。事实上，我们现在要解决的是 <span class="arithmatex">\(y=\varnothing\)</span> 在 <span class="arithmatex">\((z,y)\sim p_\text{data}\)</span> 的采样下无法得到的问题。因此，我们的想法是以人工的方式引入让 <span class="arithmatex">\(y\)</span> 失效的概率，我们只需要引入一个新的超参数 <span class="arithmatex">\(\eta\)</span> 作为失效概率即可。于是，我们就可以得到 CFG 下的 loss function（事实上，和上面的 notation 只在采样的时候有这一个区别）：</p>
+<div class="arithmatex">\[
+\begin{gather*}
+\mathcal{L}_{\text{CFM}}^{\text{CFG}}(\theta) = \mathbb{E}_{\square}\| u_t^{\theta}(x|y) - u_t^{\text{target}}(x|z) \|^2 \\
+\square = (z,y) \sim p_{\text{data}}(z,y), t \sim \text{Unif}[0,1), x \sim p_t(\cdot|z), \text{replace } y = \varnothing \text{ with prob. } \eta
+\end{gather*}
+\]</div>
+<div class="admonition note">
+<p class="admonition-title">总结一下！</p>
+<p>上面，我们讲述了如何实现<strong>无分类器引导的流模型</strong> (Classifier-Free Guidance for Flow Models) 的训练和推理。</p>
+<p>训练过程：</p>
+<div class="arithmatex">\[
+\begin{align*}
+(z,y) \sim p_{\text{data}}(z,y) &amp; \quad \blacktriangleright \quad \text{Sample } (z,y) \text{ from data distribution.} \\
+t \sim \text{Unif}[0,1) &amp; \quad \blacktriangleright \quad \text{Sample } t \text{ uniformly on } [0,1). \\
+x \sim p_t(x|z) &amp; \quad \blacktriangleright \quad \text{Sample } x \text{ from the conditional probability path } p_t(x|z). \\
+\text{with prob. } \eta, y \leftarrow \varnothing &amp; \quad \blacktriangleright \quad \text{Replace } y \text{ with } \varnothing \text{ with probability } \eta. \\
+\widehat{\mathcal{L}}_{\text{CFM}}^{\text{CFG}}(\theta) = \|u_t^{\theta}(x|y) - u_t^{\text{target}}(x|z)\|^2 &amp; \quad \blacktriangleright \quad \text{Regress model against conditional vector field.}
+\end{align*}
+\]</div>
+<p>推理过程：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\textbf{Initialization:} \quad &amp; X_0 \sim p_{\text{init}}(x) &amp;&amp; \blacktriangleright \text{ Initialize with simple distribution (such as a Gaussian)} \\[2ex]
+\textbf{Simulation:} \quad &amp; dX_t = \tilde{u}_t^{\theta}(X_t|y)dt &amp;&amp; \blacktriangleright \text{ Simulate ODE from } t=0 \text{ to } t=1. \\[2ex]
+\textbf{Samples:} \quad &amp; X_1 &amp;&amp; \blacktriangleright \text{ Goal is for } X_1 \text{ to adhere to the guiding variable } y.
+\end{align*}
+\]</div>
+<p>注意到，在这种情况下，如果我们设置 <span class="arithmatex">\(w\gt1\)</span>，<span class="arithmatex">\(X_1\)</span> 的分布并不完全和 <span class="arithmatex">\(X_1\sim p_\text{data}(\cdot|y)\)</span> 匹配。但是在实践中我们发现它能够和条件实现更好的对齐。</p>
+</div>
+<p><a class="glightbox" href="../img/image-20250728121550936.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250728121550936" src="../img/image-20250728121550936.webp" /></a></p>
+<p><a class="glightbox" href="../img/image-20250728121609462.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250728121609462" src="../img/image-20250728121609462.webp" /></a></p>
+<h3 id="扩散模型">扩散模型<a class="headerlink" href="#扩散模型" title="Permanent link">&para;</a></h3>
+<p>扩散模型相较流模型仅仅增加了一个分数项，它们在推导上十分类似，因此在这里我们仅给出 CFG 情况下的最后结论。</p>
+<p>给定无引导边际分数 <span class="arithmatex">\(\nabla \log p_t(x|\varnothing)\)</span> 和引导边际分数 <span class="arithmatex">\(\nabla \log p_t(x|y)\)</span>，我们可以定义无分类器引导的分数 如下：</p>
+<div class="arithmatex">\[
+\tilde{s}_t(x|y) = (1-w)\nabla \log p_t(x|\varnothing) + w\nabla \log p_t(x|y)
+\]</div>
+<p>很类似地，我们可以把这两者用同一个神经网络 <span class="arithmatex">\(s_t^\theta(x|y)\)</span> 统一起来，并得到 CFG-CSM 的损失函数：</p>
+<div class="arithmatex">\[
+\begin{gather*}
+\mathcal{L}_{\text{CSM}}^{\text{CFG}}(\theta) = \mathbb{E}_{\square}\| s_t^{\theta}(x|(1-\xi)y + \xi\varnothing) - \nabla \log p_t(x|z) \|^2 \\
+\square = (z,y) \sim p_{\text{data}}(z,y), t \sim \text{Unif}[0,1), x \sim p_t(\cdot|z), \text{replace } y = \varnothing \text{ with prob. } \eta
+\end{gather*}
+\]</div>
+<p>而在推理过程中，我们需要分别定义如下两个向量场：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\tilde{s}_t^{\theta}(x|y) &amp;= (1-w)s_t^{\theta}(x|\varnothing) + w s_t^{\theta}(x|y), \\
+\tilde{u}_t^{\theta}(x|y) &amp;= (1-w)u_t^{\theta}(x|\varnothing) + w u_t^{\theta}(x|y).
+\end{align*}
+\]</div>
+<p>推理过程：</p>
+<div class="arithmatex">\[
+\begin{align*}
+\textbf{Initialization:} \quad &amp; X_0 \sim p_{\text{init}}(x) &amp;&amp; \blacktriangleright \text{ Initialize with simple distribution (such as a Gaussian)} \\
+\textbf{Simulation:} \quad &amp; dX_t = \left[ \tilde{u}_t^{\theta}(X_t|y) + \frac{\sigma_t^2}{2} \tilde{s}_t^{\theta}(X_t|y) \right] dt + \sigma_t dW_t &amp;&amp; \blacktriangleright \text{ Simulate SDE from } t=0 \text{ to } t=1. \\
+\textbf{Samples:} \quad &amp; X_1 &amp;&amp; \blacktriangleright \text{ Goal is for } X_1 \text{ to adhere to the guiding variable } y.
+\end{align*}
+\]</div>
+<h2 id="神经网络架构">神经网络架构<a class="headerlink" href="#神经网络架构" title="Permanent link">&para;</a></h2>
+<h3 id="u-net">U-Net<a class="headerlink" href="#u-net" title="Permanent link">&para;</a></h3>
+<p>U-Net 是 CNN 的一种，它特别适合用于图像到图像的任务。</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>功能描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Encoder</strong></td>
+<td>多层卷积 + 下采样（如 MaxPooling），提取逐层压缩的特征表示，保留语义信息；</td>
+</tr>
+<tr>
+<td><strong>Bottleneck (Midcoder)</strong></td>
+<td>处理最紧凑的抽象特征表示，在此处嵌入时间 <span class="arithmatex">\(t\)</span> 和条件变量 <span class="arithmatex">\(y\)</span>；</td>
+</tr>
+<tr>
+<td><strong>Decoder</strong></td>
+<td>多层卷积 + 上采样（如 UpConv 或插值），逐步恢复分辨率，实现图像重建；</td>
+</tr>
+</tbody>
+</table>
+<p>它还有一个重要特点是使用残差连接 (skip connections) 的机制，将 encoder 层的中间特征直接传递给 decoder 的相应层。由于编码路径会逐步丢失空间细节信息，这样的方式能将低层次的纹理信息保留下来，增强最终图像质量。</p>
+<p><a class="glightbox" href="../img/image-20250728145957717.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="" src="../img/image-20250728145957717.webp" /></a></p>
+<div class="arithmatex">\[
+\begin{align*}
+x_t^{\text{input}} \in \mathbb{R}^{3 \times 256 \times 256} &amp; \quad \blacktriangleright \quad \text{Input to the U-Net.} \\[2ex]
+x_t^{\text{latent}} = \mathcal{E}(x_t^{\text{input}}) \in \mathbb{R}^{512 \times 32 \times 32} &amp; \quad \blacktriangleright \quad \text{Pass through encoders to obtain latent.} \\[2ex]
+x_t^{\text{latent}} = \mathcal{M}(x_t^{\text{latent}}) \in \mathbb{R}^{512 \times 32 \times 32} &amp; \quad \blacktriangleright \quad \text{Pass latent through midcoder.} \\[2ex]
+x_t^{\text{output}} = \mathcal{D}(x_t^{\text{latent}}) \in \mathbb{R}^{3 \times 256 \times 256} &amp; \quad \blacktriangleright \quad \text{Pass through decoders to obtain output.}
+\end{align*}
+\]</div>
+<h3 id="dit">DiT<a class="headerlink" href="#dit" title="Permanent link">&para;</a></h3>
+<p>DiT 将输入图像分割成一系列不重叠的图块（patches）。然后将这些图块嵌入为向量，并由一个 Transformer 架构处理，该架构使用注意力机制来建模所有图块对之间的关系 。</p>
+<p><a class="glightbox" href="../img/image-20250728150105101.webp" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="image-20250728150105101" src="../img/image-20250728150105101.webp" /></a></p>
+<p>在大规模生成任务中，一个普遍面临的问题是数据维度过高，导致显著的内存消耗。例如，若需生成一幅分辨率为 <span class="arithmatex">\(1000 \times 1000\)</span> 像素的图像，其维度将达到百万量级，极大增加了模型训练与采样的资源开销。为缓解这一问题，当前主流的方法是采用<strong>潜空间建模</strong>（latent space modeling），即将图像从原始像素空间压缩到一个低维潜空间中进行建模与采样。</p>
+<p>具体而言，这一范式通常结合<strong>流模型或扩散模型</strong>与一个（变分）自编码器（(variational) autoencoder）使用。首先，通过预训练的自编码器将训练数据映射至潜空间，随后在该压缩表示上训练流模型或扩散模型。在生成阶段，模型先在潜空间中完成采样过程，再借助解码器将潜变量还原为完整的图像。</p>
+<p>这种方法的核心优势在于：高质量的自编码器能够有效剔除语义无关或感知不敏感的图像细节，从而引导生成模型聚焦于关键的、高层次语义特征，提高建模效率与生成质量。由此构建的<strong>潜空间扩散模型（latent diffusion models）</strong>，已成为当前图像与视频生成领域中最主流的技术路线之一。</p>
+<p>值得注意的是，该方法的性能不仅取决于扩散模型本身的表达能力，还高度依赖于自编码器的质量，尤其是在图像压缩与重建过程中是否能够保留足够的语义信息与感知质量。因此，在训练扩散模型之前，确保自编码器的充分训练与优化是关键前提。</p>
+<h3 id="编码-guiding-variable">编码 Guiding Variable<a class="headerlink" href="#编码-guiding-variable" title="Permanent link">&para;</a></h3>
+<p>接下来，我们介绍如何把引导变量 <span class="arithmatex">\(y\)</span> 注入神经网络 <span class="arithmatex">\(u_t^\theta(x|y)\)</span> 的问题。总的来说，这个过程可以分为两个步骤：</p>
+<ul>
+<li>将原始输入 <span class="arithmatex">\(y_\text{raw}\)</span> 转换为向量输入 <span class="arithmatex">\(y\)</span>；</li>
+<li>将这个向量注入到神经网络中。</li>
+</ul>
+<p>首先是第一步。对于离散的类别标签，可以为每个类别学习一个嵌入向量 。而对于文本提示，通常使用强大的、预训练好的文本编码器模型，如 <strong>CLIP（Contrastive Language-Image Pre-training）</strong> 。这些模型擅长捕捉文本的语义信息 。</p>
+<p>接下来，我们需要把这些信息注入网络中。一种方法是使用 point-wise 的方式将编码后的向量注入网络，例如：</p>
+<div class="arithmatex">\[
+\begin{align*}
+y &amp;= \text{MLP}(y) \in \mathbb{R}^C &amp;&amp; \quad \blacktriangleright \quad \text{Map } y \text{ from } \mathbb{R}^{d_y} \text{ to } \mathbb{R}^C. \\[2ex]
+y &amp;= \text{reshape}(y) \in \mathbb{R}^{C \times 1 \times 1} &amp;&amp; \quad \blacktriangleright \quad \text{Reshape } y \text{ to "look" like an image.} \\[2ex]
+x_t^{\text{intermediate}} &amp;= \text{broadcast_add}(x_t^{\text{intermediate}}, y) \in \mathbb{R}^{C \times H \times W} &amp;&amp; \quad \blacktriangleright \quad \text{Add } y \text{ to } x_t^{\text{intermediate}} \text{ pointwise.}
+\end{align*}
+\]</div>
+<p>另外，还有例如 cross-attention 的方法应用于 DiT 中。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2025年8月3日 08:48:21 UTC">2025年8月3日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../lec3/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Lec3: Training Flow and Diffusion Models">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Lec3: Training Flow and Diffusion Models
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../rl/" class="md-footer__link md-footer__link--next" aria-label="下一页: Index">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Index
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © HarryZ
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.footer", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.tracking", "navigation.path", "navigation.top", "toc.follow", "content.action.view", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/polyfill/index.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.js"></script>
+      
+        <script src="../../../javascripts/tablesort.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/tablesort/dist/tablesort.min.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>
