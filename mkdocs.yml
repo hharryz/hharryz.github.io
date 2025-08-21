@@ -15,12 +15,19 @@ nav:
       - "Lec4: Building an Image Generator": ai/diffusion/lec4.md
     - RL:
       - ai/rl/index.md
+  - 论文阅读:
+    - papers/index.md
+    - MLSys:
+      - papers/blitzscale.md
+      - papers/cacheblend.md
+      - papers/mooncake.md
   - 杂项:
     - misc/index.md
 
 site_name: HarryZ の Notebook
 site_url: https://note.uqbarz.com/
 repo_url: https://github.com/hharryz/hharryz.github.io
+edit_uri: raw/main/docs/
 repo_name: hharryz.github.io
 site_author: HarryZ
 copyright: Copyright © HarryZ
